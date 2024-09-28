@@ -13,6 +13,7 @@
     // UI references
     const restartButton = document.querySelector("#restart");
     const colorSelectButtons = document.querySelectorAll(".color-select");
+    const undoButton = document.querySelector("#undo"); //Undo button reference
 
     // Constants
     const CELL_COLORS = {
@@ -31,7 +32,6 @@
     let grids = [];
 
     // #endregion
-
 
     // *****************************************************************************
     // #region Game Logic
@@ -68,7 +68,7 @@
       const gridCoordinates = convertCartesiansToGrid(mousePositionX, mousePositionY);
       const newGrid = grids[grids.length - 1].slice(); //Makes a copy of the most recent grid state
       floodFill(newGrid, gridCoordinates, newGrid[gridCoordinates.row * CELLS_PER_AXIS + gridCoordinates.column])
-      grids.push(newGrid);
+      grids.push(newGrid); //Save new state for undo feature
       render(grids[grids.length - 1]);
     }
 
@@ -89,8 +89,15 @@
       startGame(grids[0]);
     }
 
-    // #endregion
+    // Function to undo the last move
+    function undo() {
+      if (grids.length > 1) {
+        grids.pop(); // Remove the last grid state
+        render(grids[grids.length - 1]); // Render the previous state
+      }
+    }
 
+    // #endregion
 
     // *****************************************************************************
     // #region Event Listeners
@@ -108,14 +115,15 @@
     colorSelectButtons.forEach(button => {
       button.addEventListener("mousedown", () => replacementColor = CELL_COLORS[button.name])
     });
+    
+   // Event listener for the Undo button
+    undoButton.addEventListener("mousedown", undo); //Attach undo function to the undo button
 
     // #endregion
-
 
     // *****************************************************************************
     // #region Helper Functions
 
-    // To convert canvas coordinates to grid coordinates
     function convertCartesiansToGrid(xPos, yPos) {
       return {
         column: Math.floor(xPos / CELL_WIDTH),
@@ -123,13 +131,11 @@
       };
     }
 
-    // To choose a random property from a given object
     function chooseRandomPropertyFrom(object) {
       const keys = Object.keys(object);
       return object[keys[Math.floor(keys.length * Math.random())]]; //Truncates to integer
     };
 
-    // To compare two arrays
     function arraysAreEqual(arr1, arr2) {
       if (arr1.length != arr2.length) { return false }
       else {
@@ -147,7 +153,5 @@
     //Start game
     startGame();
 
-
   });
 })();
-
