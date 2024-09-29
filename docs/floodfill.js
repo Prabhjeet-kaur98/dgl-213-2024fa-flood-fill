@@ -13,7 +13,8 @@
     // UI references
     const restartButton = document.querySelector("#restart");
     const colorSelectButtons = document.querySelectorAll(".color-select");
-    const undoButton = document.querySelector("#undo"); //Undo button reference
+    const undoButton = document.querySelector("#undo"); // Undo button reference
+    const playerScoreText = document.querySelector("#score"); // Score display reference
 
     // Constants
     const CELL_COLORS = {
@@ -26,10 +27,13 @@
     const CELLS_PER_AXIS = 9;
     const CELL_WIDTH = canvas.width / CELLS_PER_AXIS;
     const CELL_HEIGHT = canvas.height / CELLS_PER_AXIS;
+    const MAXIMUM_SCORE = 1000; // Maximum score based on time, you can adjust this value as needed
 
     // Game objects
     let replacementColor = CELL_COLORS.white;
     let grids = [];
+    let startTime = 0; // Start time of the game
+    let playerScore = MAXIMUM_SCORE; // Initial player score
 
     // #endregion
 
@@ -41,6 +45,8 @@
         startingGrid = initializeGrid();
       }
       initializeHistory(startingGrid);
+      startTime = Date.now(); // Record the start time when the game begins
+      playerScore = MAXIMUM_SCORE; // Reset the score
       render(grids[0]);
     }
 
@@ -70,6 +76,7 @@
       floodFill(newGrid, gridCoordinates, newGrid[gridCoordinates.row * CELLS_PER_AXIS + gridCoordinates.column])
       grids.push(newGrid); //Save new state for undo feature
       render(grids[grids.length - 1]);
+      calculateTimeScore(); //Calculate the score based on the elapsed time
     }
 
     function floodFill(grid, gridCoordinate, colorToChange) {
@@ -87,6 +94,13 @@
 
     function restart() {
       startGame(grids[0]);
+    }
+
+    // Function to calculate the score based on elapsed time
+    function calculateTimeScore() {
+      const elapsedTime = Math.floor((Date.now() - startTime) / 1000); // Calculate elapsed time in seconds
+      playerScore = Math.max(MAXIMUM_SCORE - elapsedTime * 10, 0); // Decrease score as time passes, adjust multiplier as needed
+      playerScoreText.innerText = `Score: ${playerScore}`; // Update score display
     }
 
     // Function to undo the last move
@@ -115,8 +129,8 @@
     colorSelectButtons.forEach(button => {
       button.addEventListener("mousedown", () => replacementColor = CELL_COLORS[button.name])
     });
-    
-   // Event listener for the Undo button
+
+    // Event listener for the Undo button
     undoButton.addEventListener("mousedown", undo); //Attach undo function to the undo button
 
     // #endregion
