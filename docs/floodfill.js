@@ -14,6 +14,7 @@
     const restartButton = document.querySelector("#restart");
     const colorSelectButtons = document.querySelectorAll(".color-select");
     const undoButton = document.querySelector("#undo"); // Undo button reference
+    const hintButton = document.querySelector("#hint-button"); // Hint button reference
     const playerScoreText = document.querySelector("#score"); // Score display reference
 
     // Constants
@@ -111,6 +112,43 @@
       }
     }
 
+    // Function to calculate the best move for the hint
+    function calculateBestMove() {
+      let bestMove = { column: 0, row: 0 };
+      let maxChange = 0;
+
+      // Iterate over the grid to find the cell with the maximum effect
+      for (let row = 0; row < CELLS_PER_AXIS; row++) {
+        for (let column = 0; column < CELLS_PER_AXIS; column++) {
+          const simulatedGrid = grids[grids.length - 1].slice();
+          const currentColor = simulatedGrid[row * CELLS_PER_AXIS + column];
+          floodFill(simulatedGrid, { column, row }, currentColor);
+          const changeCount = simulatedGrid.filter((cell, index) => {
+            return !arraysAreEqual(cell, grids[grids.length - 1][index]);
+          }).length;
+
+          if (changeCount > maxChange) {
+            maxChange = changeCount;
+            bestMove = { column, row };
+          }
+        }
+      }
+
+      return bestMove;
+    }
+
+    // Function to highlight the suggested cell for the hint
+    function highlightHint() {
+      const bestMove = calculateBestMove();
+      const x = bestMove.column * CELL_WIDTH;
+      const y = bestMove.row * CELL_HEIGHT;
+
+      // Draw a border around the suggested cell
+      ctx.strokeStyle = 'yellow';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(x, y, CELL_WIDTH, CELL_HEIGHT);
+    }
+
     // #endregion
 
     // *****************************************************************************
@@ -132,6 +170,9 @@
 
     // Event listener for the Undo button
     undoButton.addEventListener("mousedown", undo); //Attach undo function to the undo button
+
+    // Event listener for the Hint button
+    hintButton.addEventListener("mousedown", highlightHint); //Attach highlightHint function to the hint button
 
     // #endregion
 
