@@ -488,3 +488,97 @@ It is typical in JavaScript to place the function that initializes the program a
 ```javascript
 startGame();
 ```
+
+### Additional Features
+### 1. Scoring System
+Description:
+
+The game now includes a time-based scoring system. The player’s score decreases as more time passes. The quicker the player completes the game, the higher their score.
+The maximum score is set to 1000 points, and for every second that passes, 10 points are deducted.
+Code Explanation:
+
+A global variable startTime is initialized to record the start time when the game begins.
+The calculateTimeScore() function calculates the score based on the time elapsed, and updates the playerScoreText element in the UI.
+This function is called after every move in updateGridAt() to ensure the score is updated in real-time.
+```javascript
+function calculateTimeScore() {
+  const elapsedTime = Math.floor((Date.now() - startTime) / 1000); // Calculate elapsed time in seconds
+  playerScore = Math.max(MAXIMUM_SCORE - elapsedTime * 10, 0); // Decrease score as time passes, adjust multiplier as needed
+  playerScoreText.innerText = `Score: ${playerScore}`; // Update score display
+}
+```
+### 2. Undo Functionality
+Description:
+
+An undo feature was added that allows the player to undo their last move and revert to the previous game state. This helps if the player makes a mistake or wants to try a different strategy.
+Code Explanation:
+
+A global grids array stores the history of all previous grid states.
+The undo() function removes the latest grid from the history and renders the previous grid on the canvas.
+The function is triggered by the Undo button, which is captured by an event listener.
+
+```javascript
+function undo() {
+  if (grids.length > 1) {
+    grids.pop(); // Remove the last grid state
+    render(grids[grids.length - 1]); // Render the previous state
+  }
+}
+```
+The Undo button is linked to this functionality with the following event listener:
+```javascript
+undoButton.addEventListener("mousedown", undo);
+```
+### 3. Hint System( Bonus Work)
+Description:
+
+A hint system was added to suggest the best possible move to the player. When the player clicks the Hint button, the game highlights a cell that, when clicked, would result in the most significant change in the grid.
+This is especially useful when the player is stuck and unsure of which move to make.
+Code Explanation:
+
+The calculateBestMove() function analyzes the grid and identifies the cell that will result in the most neighboring cells being filled with the selected color.
+The highlightHint() function visually highlights this suggested cell by drawing a yellow border around it on the canvas.
+```javascript
+function calculateBestMove() {
+  let bestMove = { column: 0, row: 0 };
+  let maxChange = 0;
+  
+
+  // Iterate over the grid to find the cell with the maximum effect
+ for (let row = 0; row < CELLS_PER_AXIS; row++) {
+    for (let column = 0; column < CELLS_PER_AXIS; column++) {
+      const simulatedGrid = grids[grids.length - 1].slice();
+      const currentColor = simulatedGrid[row * CELLS_PER_AXIS + column];
+      floodFill(simulatedGrid, { column, row }, currentColor);
+      const changeCount = simulatedGrid.filter((cell, index) => {
+        return !arraysAreEqual(cell, grids[grids.length - 1][index]);
+      }).length;
+
+      if (changeCount > maxChange) {
+        maxChange = changeCount;
+        bestMove = { column, row };
+      }
+    }
+  }
+
+  return bestMove;
+}
+```
+The highlightHint() function visually highlights the suggested cell using a yellow border:
+```javascript
+function highlightHint() {
+  const bestMove = calculateBestMove();
+  const x = bestMove.column * CELL_WIDTH;
+  const y = bestMove.row * CELL_HEIGHT;
+
+  // Draw a border around the suggested cell
+  ctx.strokeStyle = 'yellow';
+  ctx.lineWidth = 5;
+  ctx.strokeRect(x, y, CELL_WIDTH, CELL_HEIGHT);
+}
+```
+The Hint button is linked to this functionality with the following event listener:
+\
+```javascript
+hintButton.addEventListener("mousedown", highlightHint);
+```
